@@ -70,7 +70,7 @@ sw = Pin(22, Pin.IN, Pin.PULL_UP)
 center_x = x_axis.read_u16()
 center_y = y_axis.read_u16()
 
-DEADZONE = 4000
+DEADZONE = 2000
 prev_sw = sw.value()
 
 

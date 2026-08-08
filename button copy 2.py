@@ -2,6 +2,9 @@ from machine import Pin, I2S, ADC
 import time
 import math
 import array
+import random
+import _thread
+import json
 
 frequencyMap = {
     1: 261,   # B1 only (e.g., C4)
@@ -20,11 +23,15 @@ frequencyMap = {
     14: 987,  # B2 + B3 + B4 (2+4+8=14)
     15: 1046  # All 4 Buttons (1+2+4+8=15)
 }
+
+#instrument setting
+currentInstrument = 1
+            
 SCK_PIN = 13  # Bit Clock (BCLK) -> GP13
 WS_PIN = 14   # Word Select (LRC)  -> GP14 (13 + 1)
 SD_PIN = 15   # Serial Data (DIN)  -> GP15
 SAMPLE_RATE = 11025
-NOTE_DURATION = 0.7
+NOTE_DURATION = 0.2
 
 audio_out = I2S(
     0,
@@ -51,7 +58,7 @@ def get_volume():
 # PLAY NOTE WITH VOLUME
 # -----------------------------
 def play_note(buffer):
-    vol = get_volume()
+    #vol = get_volume()
     scaled = array.array("h", [0] * len(buffer))
 
     for i in range(len(buffer)):
@@ -70,7 +77,7 @@ sw = Pin(22, Pin.IN, Pin.PULL_UP)
 center_x = x_axis.read_u16()
 center_y = y_axis.read_u16()
 
-DEADZONE = 4000
+DEADZONE = 2000
 prev_sw = sw.value()
 
 
@@ -88,23 +95,59 @@ def get_direction(x, y):
             return "DOWN"
 
     return "CENTER"
+#### -----------------------------
 
-
-noteCache = {}
 totalSamples = int(SAMPLE_RATE * NOTE_DURATION)
+### removed noteCache 
+
+instrument_bank = {
+    1: {}, # guitar
+    2: {}, # piano
+    3: {}  # 8bit
+}
+
+print(json.dumps({"log": "Generating instruments..."}))
 
 for combo, freq in frequencyMap.items():
-    buffer = array.array("h", [0] * totalSamples)
+    buff_guitar = array.array("h", [0] * totalSamples)
+    buff_piano = array.array("h", [0] * totalSamples)
+    buff_8bit = array.array("h", [0] * totalSamples)
+    
+    # --- GUITAR SETUP (Karplus-Strong String Pluck) ---
+    # We figure out how long the string needs to be based on the frequency
+    string_length = max(1, int(SAMPLE_RATE / freq))
+    
+    # Fill the string with random noise (the pick striking the string)
+    delay_line = [random.uniform(-1.0, 1.0) for _ in range(string_length)]
+    ptr = 0
+    
     for i in range(totalSamples):
         t = i / SAMPLE_RATE
-        # Rich harmonic waveform + exponential decay envelope
+        
+        # 1. GUITAR MATH
+        g_val = delay_line[ptr]
+        next_ptr = (ptr + 1) % string_length
+        delay_line[ptr] = (g_val + delay_line[next_ptr]) * 0.5 * 0.995 #type: ignore
+        buff_guitar[i] = int(g_val * 4000)
+        ptr = next_ptr
+        
+        # 2. 8-BIT MATH (Square Wave)
+        s_val = math.sin(2 * math.pi * freq * t)
+        sq_wave = 1.0 if s_val > 0 else -1.0
+        sq_env = math.exp(-2.5 * t) 
+        buff_8bit[i] = int(sq_wave * sq_env * 2000) 
+        
+        # 3. CLASSIC SYNTH MATH (Sine Wave)
         wave = math.sin(2 * math.pi * freq * t) + 0.3 * math.sin(2 * math.pi * (freq * 2) * t)
-        envelope = math.exp(-3.0 * t) 
-        buffer[i] = int(wave * envelope * 16383)
-    noteCache[combo] = buffer
+        synth_env = math.exp(-4.0 * t)
+        buff_piano[i] = int(wave * synth_env * 4000)
+        
+    instrument_bank[1][combo] = buff_guitar
+    instrument_bank[2][combo] = buff_piano
+    instrument_bank[3][combo] = buff_8bit
 
-print("loading done")
-#_thread.start_new_thread(audioSynthThread, ())
+
+print(json.dumps({"log": "Loading done"}))
 
 class Button:
     def __init__(self, pinNum, name, chordVal):
@@ -139,6 +182,13 @@ class Button:
     def checkPress(self):
         if self.hitReady:
             self.hitReady = False
+            # Return the exact hardware timestamp instead of just 'True'
+            return self.prevActionTime 
+        return None
+    
+    def checkPressSafe(self):
+        if self.hitReady:
+            self.hitReady = False
             print(self.name + " hit")
             return True
         return False
@@ -148,9 +198,9 @@ lane2 = Button(17, "lane2", 2)
 lane3 = Button(18, "lane3", 4)
 lane4 = Button(19, "lane4", 8)
 
-blueButton = Button(20, "lane4", 0)
-RedButton = Button(21, "lane4", 0)
-GreenButton = Button(22, "lane4", 0)
+blueButton = Button(0, "bluebutton", 0)
+redButton = Button(1, "redbutton", 0)
+greenButton = Button(2, "greenbutton", 0)
 
 all_lanes = [lane1, lane2, lane3, lane4]
 
@@ -159,24 +209,52 @@ chordStartTime = 0
 chordWindowConst = 40
 
 while True:
+    vol = get_volume()  # inside the loop for real-time control
 
-    ### STRUMMING ###
+ ### STRUMMING ###
     x_val = x_axis.read_u16()
     y_val = y_axis.read_u16()
     sw_val = sw.value()
     
     direction = get_direction(x_val, y_val)
-    
 
-    ### BUTTON PRESS ###
+
+    #instrument change
+    if blueButton.checkPress() is not None:
+        currentInstrument = 1
+        print(json.dumps({"type": "instrument", "value": 1, "name": "guitar"}))
+    elif redButton.checkPress() is not None:
+        currentInstrument = 2
+        print(json.dumps({"type": "instrument", "value": 2, "name": "piano"}))
+    elif greenButton.checkPress() is not None:
+        currentInstrument = 3
+        print(json.dumps({"type": "instrument", "value": 3, "name": "8bit"}))
+
     for lane in all_lanes:
-        if (direction == "UP" or direction == "DOWN") and lane.checkPress():
-            if not chordTimerRunning:
-                chordTimerRunning = True
-                chordStartTime = time.ticks_ms()
-                print("Volume:", get_volume())
-                print("STRUM:", direction)
-    #### CHORD TIMER ###
+        hit_time = lane.checkPress()
+
+        ###strum detection
+        strum = (direction == "UP" or direction == "DOWN")
+
+        ###changed conditions for strum and hit_time to be separate, so that we can send button hit data instantly without waiting for strum
+        if hit_time is not None:
+            if strum == True:
+            # --- NEW: SEND BUTTON DATA INSTANTLY ---
+                data_packet = {
+                    "type": "button_hit",
+                    "button": lane.name,
+                    "lane_value": lane.chordVal,
+                    "timestamp": hit_time,
+                    "volume": vol,           ### added volume to the data packet
+                    "strum": strum            ### added strum to the data packet
+            }
+                print(json.dumps(data_packet))
+            
+            # (Still start the timer so the Pico knows to play local audio later)
+                if not chordTimerRunning:
+                    chordTimerRunning = True
+                    chordStartTime = hit_time
+    
     if chordTimerRunning:
         currentTime = time.ticks_ms()
         if time.ticks_diff(currentTime, chordStartTime) > chordWindowConst:
@@ -190,10 +268,13 @@ while True:
             if lane4.isPressed:
                 comboVal += 8
             
-            if comboVal in noteCache:
+            if comboVal in frequencyMap:
                 returnFreq = frequencyMap[comboVal]
-                print("Hit " + str(returnFreq) + " Hz")
-                play_note(noteCache[comboVal])         ## changed to play_note(noteCache[comboVal]) to play the note with volume scaling    
+                hz_log = {
+                    "type": "log",
+                    "message": f"Hit {returnFreq} Hz (Combo {comboVal})",
+                    "frequency": returnFreq
+                }
+                print(json.dumps(hz_log))
+                play_note(instrument_bank[currentInstrument][comboVal]) ###CHANGED TO PLAY NOTE WITH VOLUME SCALING            
             chordTimerRunning = False
-            print(comboVal)
-        
