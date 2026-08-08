@@ -20,17 +20,16 @@ def get_direction(x, y):
 
     if abs(dx) < DEADZONE and abs(dy) < DEADZONE:
         return "CENTER"
-    # prioritize vertical vs horizontal by magnitude
     if abs(dx) > abs(dy):
         if dx < -DEADZONE:
             return "UP"
         elif dx > DEADZONE:
             return "DOWN"
-    else:
-        if dy < -DEADZONE:
-            return "UP"
-        elif dy > DEADZONE:
-            return "DOWN"
+    #else:
+    #    if dy < -DEADZONE:
+    #        return "UP"
+    #    elif dy > DEADZONE:
+    #        return "DOWN"
     return "CENTER"
 
 while True:
