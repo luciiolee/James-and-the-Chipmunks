@@ -48,16 +48,17 @@ audio_out = I2S(
     ibuf=20000 # how much meemory to set aside for sound in bytes
 )
 
+# --- VOLUME ----
+
 VOL_PIN = 28 # Slide Potetiometer -> GP28
 
 volume_pot = ADC(VOL_PIN)
 
-def get_volume(): # 
+def get_volume(): #return volume as 0-1 value
     raw = volume_pot.read_u16()
     return raw / 65535
 
-def play_note(buffer):
-    #vol = get_volume()
+def play_note(buffer): #scales note based on volume
     scaled = array.array("h", [0] * len(buffer))
 
     for i in range(len(buffer)):
@@ -66,9 +67,8 @@ def play_note(buffer):
     audio_out.write(scaled)
 
 
-# -----------------------------
-# JOYSTICK SETUP
-# -----------------------------
+# --- STRUMMING ----
+
 x_axis = ADC(26)   # VRx
 y_axis = ADC(27)   # VRy
 sw = Pin(22, Pin.IN, Pin.PULL_UP)
