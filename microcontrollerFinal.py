@@ -29,9 +29,9 @@ frequencyMap = {
 currentInstrument = 1
 
 # Pins
-SD_PIN = 15   # Serial Data (DIN)  -> GP15
-WS_PIN = 14   # Word Select (LRC)  -> GP14 
-SCK_PIN = 13  # Bit Clock (BCLK) -> GP13
+WS_PIN = 2   # Word Select (LRC)  -> GP15 
+SCK_PIN = 1  # Bit Clock (BCLK) -> GP14
+SD_PIN = 0   # Serial Data (DIN)  -> GP13
 VOL_PIN = 28 # Slide Potetiometer -> GP28
 X_PIN_GYRO = 26
 Y_PIN_GYRO = 27
@@ -39,12 +39,12 @@ LANE1_PIN = 16
 LANE2_PIN = 17
 LANE3_PIN = 18
 LANE4_PIN = 19
-BLUE_BUTTON_PIN = 0
-RED_BUTTON_PIN = 1
-GREEN_BUTTON_PIN = 2
-LED_GUITAR = Pin(4, Pin.OUT)
-LED_PIANO = Pin(5, Pin.OUT)
-LED_8BIT = Pin(6, Pin.OUT)
+BLUE_BUTTON_PIN = 20
+RED_BUTTON_PIN = 21
+GREEN_BUTTON_PIN = 22
+LED_GUITAR = Pin(15, Pin.OUT)
+LED_PIANO = Pin(14, Pin.OUT)
+LED_8BIT = Pin(13, Pin.OUT) 
 
 SAMPLE_RATE = 11025
 NOTE_DURATION = 0.2
@@ -68,7 +68,7 @@ volume_pot = ADC(VOL_PIN)
 
 def get_volume(): #return volume as 0-1 value
     raw = volume_pot.read_u16()
-    return raw / 65535
+    return raw / 65535 #1
 
 def play_note(buffer): #scales note based on volume
     scaled = array.array("h", [0] * len(buffer))
@@ -117,7 +117,7 @@ def update_instrument_leds(instrument_num):
     LED_8BIT.value(1 if instrument_num == 3 else 0)
 
 # Set the starting LED (Instrument 1)
-#update_instrument_leds(currentInstrument)
+update_instrument_leds(currentInstrument)
 
 totalSamples = int(SAMPLE_RATE * NOTE_DURATION)
 
@@ -242,22 +242,22 @@ while True:
     #instrument change
     if blueButton.checkPress() is not None:
         currentInstrument = 1
-        #update_instrument_leds(currentInstrument)
+        update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 1, "name": "guitar"}))
     elif redButton.checkPress() is not None:
         currentInstrument = 2
-        #update_instrument_leds(currentInstrument)
+        update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 2, "name": "piano"}))
     elif greenButton.checkPress() is not None:
         currentInstrument = 3
-        #update_instrument_leds(currentInstrument)
+        update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 3, "name": "8bit"}))
 
     for lane in all_lanes:
         hit_time = lane.checkPress()
 
         ###strum detection
-        strum = (direction == "UP" or direction == "DOWN")
+        strum = (direction == "UP" or direction == "DOWN") #True
 
         ###changed conditions for strum and hit_time to be separate, so that we can send button hit data instantly without waiting for strum
         if hit_time is not None:
