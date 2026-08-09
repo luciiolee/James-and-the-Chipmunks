@@ -32,6 +32,19 @@ currentInstrument = 1
 SD_PIN = 15   # Serial Data (DIN)  -> GP15
 WS_PIN = 14   # Word Select (LRC)  -> GP14 
 SCK_PIN = 13  # Bit Clock (BCLK) -> GP13
+VOL_PIN = 28 # Slide Potetiometer -> GP28
+X_PIN_GYRO = 26
+Y_PIN_GYRO = 27
+LANE1_PIN = 16
+LANE2_PIN = 17
+LANE3_PIN = 18
+LANE4_PIN = 19
+BLUE_BUTTON_PIN = 0
+RED_BUTTON_PIN = 1
+GREEN_BUTTON_PIN = 2
+LED_GUITAR = Pin(4, Pin.OUT)
+LED_PIANO = Pin(5, Pin.OUT)
+LED_8BIT = Pin(6, Pin.OUT)
 
 SAMPLE_RATE = 11025
 NOTE_DURATION = 0.2
@@ -50,7 +63,6 @@ audio_out = I2S(
 
 # --- VOLUME ----
 
-VOL_PIN = 28 # Slide Potetiometer -> GP28
 
 volume_pot = ADC(VOL_PIN)
 
@@ -68,8 +80,6 @@ def play_note(buffer): #scales note based on volume
 
 
 # --- STRUMMING ----
-X_PIN_GYRO = 26
-Y_PIN_GYRO = 27
 
 x_axis = ADC(X_PIN_GYRO)   # VRx
 y_axis = ADC(Y_PIN_GYRO)   # VRy
@@ -97,6 +107,17 @@ def get_direction(x, y):
 
     return "CENTER"
 # -----------------------------
+
+# LEDS 
+
+def update_instrument_leds(instrument_num):
+    # Turns the correct LED ON (1) and the others OFF (0)
+    LED_GUITAR.value(1 if instrument_num == 1 else 0)
+    LED_PIANO.value(1 if instrument_num == 2 else 0)
+    LED_8BIT.value(1 if instrument_num == 3 else 0)
+
+# Set the starting LED (Instrument 1)
+#update_instrument_leds(currentInstrument)
 
 totalSamples = int(SAMPLE_RATE * NOTE_DURATION)
 
@@ -192,14 +213,14 @@ class Button:
             return True
         return False
 
-lane1 = Button(16, "lane1", 1)
-lane2 = Button(17, "lane2", 2)
-lane3 = Button(18, "lane3", 4)
-lane4 = Button(19, "lane4", 8)
+lane1 = Button(LANE1_PIN, "lane1", 1)
+lane2 = Button(LANE2_PIN, "lane2", 2)
+lane3 = Button(LANE3_PIN, "lane3", 4)
+lane4 = Button(LANE4_PIN, "lane4", 8)
 
-blueButton = Button(0, "bluebutton", 0)
-redButton = Button(1, "redbutton", 0)
-greenButton = Button(2, "greenbutton", 0)
+blueButton = Button(BLUE_BUTTON_PIN, "bluebutton", 0)
+redButton = Button(RED_BUTTON_PIN, "redbutton", 0)
+greenButton = Button(GREEN_BUTTON_PIN, "greenbutton", 0)
 
 all_lanes = [lane1, lane2, lane3, lane4]
 
@@ -221,12 +242,15 @@ while True:
     #instrument change
     if blueButton.checkPress() is not None:
         currentInstrument = 1
+        #update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 1, "name": "guitar"}))
     elif redButton.checkPress() is not None:
         currentInstrument = 2
+        #update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 2, "name": "piano"}))
     elif greenButton.checkPress() is not None:
         currentInstrument = 3
+        #update_instrument_leds(currentInstrument)
         print(json.dumps({"type": "instrument", "value": 3, "name": "8bit"}))
 
     for lane in all_lanes:
