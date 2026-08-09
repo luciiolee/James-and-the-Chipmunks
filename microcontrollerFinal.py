@@ -68,9 +68,11 @@ def play_note(buffer): #scales note based on volume
 
 
 # --- STRUMMING ----
+X_PIN_GYRO = 26
+Y_PIN_GYRO = 27
 
-x_axis = ADC(26)   # VRx
-y_axis = ADC(27)   # VRy
+x_axis = ADC(X_PIN_GYRO)   # VRx
+y_axis = ADC(Y_PIN_GYRO)   # VRy
 sw = Pin(22, Pin.IN, Pin.PULL_UP)
 
 center_x = x_axis.read_u16()
@@ -94,7 +96,7 @@ def get_direction(x, y):
             return "DOWN"
 
     return "CENTER"
-#### -----------------------------
+# -----------------------------
 
 totalSamples = int(SAMPLE_RATE * NOTE_DURATION)
 
@@ -180,7 +182,6 @@ class Button:
     def checkPress(self):
         if self.hitReady:
             self.hitReady = False
-            # Return the exact hardware timestamp instead of just 'True'
             return self.prevActionTime 
         return None
     
