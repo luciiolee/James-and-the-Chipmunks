@@ -1,0 +1,21 @@
+/* src/index.css */
+
+/* =========================
+   RESET
+========================= */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #050505;
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+}
