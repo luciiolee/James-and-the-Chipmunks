@@ -1,0 +1,16 @@
+{
+  "id": "battle-intro",
+  "title": "Battle of the Builds - Intro",
+  "notes": [
+    { "time": 2000, "lane": "green" },
+    { "time": 2500, "lane": "red" },
+    { "time": 3000, "lane": "yellow" },
+    { "time": 3500, "lane": "blue" },
+    { "time": 4000, "lane": "green" },
+    { "time": 4000, "lane": "red" },
+    { "time": 4500, "lane": "yellow" },
+    { "time": 5000, "lane": "blue" },
+    { "time": 5500, "lane": "red" },
+    { "time": 6000, "lane": "green" }
+  ]
+}

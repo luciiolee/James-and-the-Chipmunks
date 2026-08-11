@@ -1,0 +1,43 @@
+{
+  "id": "sound-test-octave",
+  "title": "Sound Test: C4 to C5",
+  "notes": [
+    { "time": 2000, "lane": "green" },
+    
+    { "time": 3000, "lane": "red" },
+    
+    { "time": 4000, "lane": "green" },
+    { "time": 4000, "lane": "red" },
+    
+    { "time": 5000, "lane": "yellow" },
+    
+    { "time": 6000, "lane": "green" },
+    { "time": 6000, "lane": "yellow" },
+    
+    { "time": 7000, "lane": "red" },
+    { "time": 7000, "lane": "yellow" },
+    
+    { "time": 8000, "lane": "green" },
+    { "time": 8000, "lane": "red" },
+    { "time": 8000, "lane": "yellow" },
+    
+    { "time": 9000, "lane": "blue" },
+    
+    { "time": 10000, "lane": "green" },
+    { "time": 10000, "lane": "blue" },
+    
+    { "time": 11000, "lane": "red" },
+    { "time": 11000, "lane": "blue" },
+    
+    { "time": 12000, "lane": "green" },
+    { "time": 12000, "lane": "red" },
+    { "time": 12000, "lane": "blue" },
+    
+    { "time": 13000, "lane": "yellow" },
+    { "time": 13000, "lane": "blue" },
+    
+    { "time": 14000, "lane": "green" },
+    { "time": 14000, "lane": "yellow" },
+    { "time": 14000, "lane": "blue" }
+  ]
+}
