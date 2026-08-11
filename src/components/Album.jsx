@@ -10,14 +10,14 @@ export default function Album() {
 
       <div className="song-card">
         <div className="track-number">TRACK 01</div>
-        <h2>DON'T FIGHT THE MUSIC</h2>
-        <h3>CHROMA</h3>
+        <h2>Bad Apple!!</h2>
+        <h3>Alstroemeria Records</h3>
         <p>Featured performance song</p>
 
         <div className="video-container">
           <iframe
-            src="https://www.youtube.com/embed/F67oeSVgo5Y"
-            title="Don't Fight The Music - Chroma"
+            src="https://www.youtube.com/embed/FtutLA63Cp8"
+            title="Bad Apple!! - Alstroemeria Records"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

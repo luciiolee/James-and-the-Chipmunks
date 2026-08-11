@@ -90,7 +90,7 @@ export default function Game() {
     syncStateRef.current.currentNote = ''
     
     // 🔥 Apply Half Time Multiplier to the timeline!
-    const mult = isHalfTime ? 1.75 : 1.0;
+    const mult = isHalfTime ? 1.9 : 1.0;
     engineRef.current.notes = song.notes.map(n => ({ ...n, time: n.time * mult, hit: false, missed: false }))
     
     engineRef.current.startTime = performance.now()
@@ -117,7 +117,7 @@ export default function Game() {
       if (timestamp - lastEmitRef.current > 33) {
         
         // Calculate the current fall time so we know what is on screen
-        const mult = isHalfTime ? 2.0 : 1.0; // Use whatever multiplier you set earlier!
+        const mult = isHalfTime ? 1.9: 1.0; // Use whatever multiplier you set earlier!
         const currentFallTime = FALL_TIME * mult;
         
         // ✂️ THE FIX: Filter out all the thousands of notes that aren't on screen yet
@@ -182,7 +182,7 @@ export default function Game() {
 
     if (appState !== 'playing') return
 
-    const mult = isHalfTime ? 1.75 : 1.0;
+    const mult = isHalfTime ? 1.9 : 1.0;
     const { timeElapsed, notes } = engineRef.current
     const targetNote = notes.find(n => n.lane === lane && !n.hit && !n.missed && Math.abs(n.time - timeElapsed) <= (HIT_WINDOW * mult))
 
